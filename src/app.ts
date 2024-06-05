@@ -1,17 +1,15 @@
 import express from "express";
 import globalErrorHandler from "./middlewares/globalErrorHandler";
-import createHttpError from "http-errors";
+import userRouter from "./routers/userRouter";
 
 const app = express();
 
-// Routing.
-app.get("/", (req, res, next) => {
-    // Creating an HTTP error
-    const error = createHttpError(400, "something went wrong");
-    // Passing the error to the next middleware
-    next(error);
+// default Routing.
+app.get("/", (req, res) => {
+    res.send("server start....");
 });
 
+app.use('/api/users', userRouter);
 app.use(globalErrorHandler);
 
 export default app;

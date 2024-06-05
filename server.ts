@@ -6,7 +6,6 @@ import { config } from "./src/config/config";
 // import Database connection file.
 import connectionDB from "./src/config/db";
 
-
 const startServer = async () => {
 
   await connectionDB();
