@@ -9,17 +9,32 @@ import userModel from "../models/UserModel";
 const validateUserCreate = [
   body('name')
     .trim()
-    .notEmpty().withMessage('Name is required')
+    .notEmpty().withMessage('Name is required').bail()
     .isLength({ min: 2 }).withMessage('Name must be at least 2 characters long'),
   body('email')
     .trim()
-    .isEmail().withMessage('Invalid email address')
+    .isEmail().withMessage('Invalid email address').bail()
     .normalizeEmail(),
   body('password')
     .trim()
-    .notEmpty().withMessage('Password is required')
-    .isLength({ min: 6 }).withMessage('Password must be at least 6 characters long')
-    .isLength({ max: 11 }).withMessage('Password must be at least 11 characters long')
+    .notEmpty().withMessage('Password is required').bail()
+    .isLength({ min: 8 }).withMessage('Password must be at least 8 characters long').bail()
+    .isLength({ max: 20 }).withMessage('Password must be at most 20 characters long').bail()
+    .custom((value) => {
+      if (!/(?=.*\d)/.test(value)) {
+        throw new Error('Password must contain at least one digit');
+      }
+      if (!/(?=.*[a-z])/.test(value)) {
+        throw new Error('Password must contain at least one lowercase letter');
+      }
+      if (!/(?=.*[A-Z])/.test(value)) {
+        throw new Error('Password must contain at least one uppercase letter');
+      }
+      if (!/(?=.*[^a-zA-Z0-9])/.test(value)) {
+        throw new Error('Password must contain at least one special character');
+      }
+      return true;
+    }),
 ];
 
 const userCreate = async (req: Request, res: Response, next: NextFunction) => {
@@ -37,7 +52,6 @@ const userCreate = async (req: Request, res: Response, next: NextFunction) => {
   //step: 2. Data base call for check user already register or not.
   // 1. check user already exits or not.
   const userExists = await userModel.findOne({ email: email});
-  console.log(userExists);
 
   if(userExists) {
     const error = createHttpError(400, "This email is already exists.");
@@ -47,10 +61,21 @@ const userCreate = async (req: Request, res: Response, next: NextFunction) => {
   // 2. hashed password.
   const hashedPassword = await bcrypt.hash(password, 10);
 
+  // step: 3. create user.
+  const userNew = await userModel.create({
+    name:name,
+    email:email,
+    password: hashedPassword
+  });
+
+  // step: 4. token generator.
+
 
   res.status(201).json({
-    message: "User created"
+   id: userNew._id
   });
+
+  // res.status(201).json({message:"ok"});
 };
 
 export { userCreate, validateUserCreate };
