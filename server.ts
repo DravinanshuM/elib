@@ -10,7 +10,7 @@ const startServer = async () => {
 
   await connectionDB();
 
-  const port = config.port || 5000;
+  const port = config.port || 5013;
 
   app.listen(port, () => {
     console.log(`Listening on port: ${port}`);
