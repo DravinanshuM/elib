@@ -2,8 +2,10 @@ import { Request, Response, NextFunction } from "express";
 import { body, validationResult } from "express-validator";
 import createHttpError from "http-errors";
 import bcrypt from 'bcrypt';
+import { sign } from "jsonwebtoken";
 
 import userModel from "../models/UserModel";
+import { config } from "../config/config";
 
 // Middleware for validations for create a user.
 const validateUserCreate = [
@@ -69,10 +71,14 @@ const userCreate = async (req: Request, res: Response, next: NextFunction) => {
   });
 
   // step: 4. token generator.
+  const token = sign({ sub: userNew._id }, config.jwt_secret as string, { 
+    expiresIn: "7d",
+    algorithm: "HS256"
+  });
 
 
   res.status(201).json({
-   id: userNew._id
+   accessToken: token
   });
 
   // res.status(201).json({message:"ok"});
