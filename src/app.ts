@@ -10,7 +10,8 @@ app.get("/", (req, res) => {
 });
 
 // it is a middleware for parsing the data.
-app.use(express.json());
+app.use(express.json()); // for parsing application/json
+app.use(express.urlencoded({ extended: true })); // for parsing application/x-www-form-urlencoded
 
 app.use('/api/users', userRouter);
 app.use(globalErrorHandler);

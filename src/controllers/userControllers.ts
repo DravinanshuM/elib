@@ -40,6 +40,36 @@ const validateUserCreate = [
     }),
 ];
 
+// Middleware validations for login user.
+const validateLoginUser = [
+  body("email")
+    .trim()
+    .notEmpty().withMessage("Email is required").bail()
+    .isEmail().withMessage("Invalid email address.").bail()
+    .normalizeEmail(),
+  body('password')
+    .trim()
+    .notEmpty().withMessage('Password is required').bail()
+    .isLength({ min: 8 }).withMessage('Password must be at least 8 characters long').bail()
+    .isLength({ max: 20 }).withMessage('Password must be at most 20 characters long').bail()
+    .custom((value) => {
+      if (!/(?=.*\d)/.test(value)) {
+        throw new Error('Password must contain at least one digit');
+      }
+      if (!/(?=.*[a-z])/.test(value)) {
+        throw new Error('Password must contain at least one lowercase letter');
+      }
+      if (!/(?=.*[A-Z])/.test(value)) {
+        throw new Error('Password must contain at least one uppercase letter');
+      }
+      if (!/(?=.*[^a-zA-Z0-9])/.test(value)) {
+        throw new Error('Password must contain at least one special character');
+      }
+      return true;
+    }),
+]
+
+// Registration user.
 const userCreate = async (req: Request, res: Response, next: NextFunction) => {
   const { name, email, password } = req.body;
 
@@ -98,5 +128,52 @@ const userCreate = async (req: Request, res: Response, next: NextFunction) => {
   
 };
 
-export { userCreate, validateUserCreate };
+
+// Login user.
+const userLogin = async (req: Request, res: Response, next: NextFunction) => {
+    const  { email, password } = req.body;
+
+    // step: 1. validation check.
+    const errors = validationResult(req);
+    if(!errors.isEmpty()) {
+      const firstError = errors.array()[0].msg;
+      const error = createHttpError(400, firstError);
+      return next(error);
+    }
+
+    // step: 3. Db calls.
+    let user;
+    try {
+      user = await userModel.findOne({ email: email });
+      if (!user) {
+        return next(createHttpError(404, "User not found"));
+      }
+    } catch (error) {
+      return next(createHttpError(500, "Error while finding user."));
+    }
+
+    // step: 4. match the password.
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) {
+      return next(createHttpError(400, "Invalid email or password"));
+    }
+
+    // step: 5. token generator.
+    try {
+      const token = sign({ sub: user._id }, config.jwt_secret as string, { 
+        expiresIn: "7d",
+        algorithm: "HS256"
+      });
+    
+      res.status(201).json({
+      accessToken: token
+      });
+    } catch (error) {
+      return next(createHttpError(500, "Error while the jwt token"));
+    }
+
+}
+
+
+export { userCreate, userLogin, validateUserCreate, validateLoginUser };
 
