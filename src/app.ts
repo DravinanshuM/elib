@@ -1,6 +1,7 @@
 import express from "express";
 import globalErrorHandler from "./middlewares/globalErrorHandler";
 import userRouter from "./routers/userRouter";
+import bookRouter from "./routers/bookRoute";
 
 const app = express();
 
@@ -13,7 +14,9 @@ app.get("/", (req, res) => {
 app.use(express.json()); // for parsing application/json
 app.use(express.urlencoded({ extended: true })); // for parsing application/x-www-form-urlencoded
 
+// Routes here.
 app.use('/api/users', userRouter);
+app.use('/api/books/', bookRouter);
 app.use(globalErrorHandler);
 
 export default app;
