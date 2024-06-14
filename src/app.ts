@@ -16,7 +16,7 @@ app.use(express.urlencoded({ extended: true })); // for parsing application/x-ww
 
 // Routes here.
 app.use('/api/users', userRouter);
-app.use('/api/books/', bookRouter);
+app.use('/api/books', bookRouter);
 app.use(globalErrorHandler);
 
 export default app;
