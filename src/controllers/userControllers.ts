@@ -168,6 +168,7 @@ const userLogin = async (req: Request, res: Response, next: NextFunction) => {
       res.status(201).json({
       accessToken: token
       });
+      
     } catch (error) {
       return next(createHttpError(500, "Error while the jwt token"));
     }
